@@ -116,3 +116,45 @@ def render():
                 with cols[j]:
                     amount_str = f"${data['total']:,.2f}"
                     styles.render_calendar_card(m_label, amount_str, data['tickers'])
+                    
+                    # Selection Button
+                    if st.button(f"{m_label} 상세", key=f"btn_{m_key}"):
+                        st.session_state['selected_month'] = m_key
+                        st.session_state['selected_month_label'] = m_label
+
+    # Detailed Breakdown Section
+    if 'selected_month' in st.session_state:
+        m_key = st.session_state['selected_month']
+        m_label = st.session_state['selected_month_label']
+        
+        st.markdown("---")
+        st.subheader(f"📊 {m_label} 배당 상세 내역 ({m_key})")
+        
+        if not df_pred.empty:
+            month_details = df_pred[df_pred['Month'] == m_key].copy()
+            
+            if not month_details.empty:
+                # Rename for UI
+                display_details = month_details.rename(columns={
+                    'Ticker': '티커',
+                    'Pay Date': '지급 예정일',
+                    'Amount Per Share': '주당 배당금',
+                    'Total Amount': '총 배당금',
+                    'Shares': '보유 수량'
+                })
+                
+                # Format
+                display_details['지급 예정일'] = display_details['지급 예정일'].dt.strftime('%Y-%m-%d')
+                display_details['주당 배당금'] = display_details['주당 배당금'].apply(lambda x: f"${x:,.2f}")
+                display_details['총 배당금'] = display_details['총 배당금'].apply(lambda x: f"${x:,.2f}")
+                
+                cols_to_show = ['지급 예정일', '티커', '보유 수량', '주당 배당금', '총 배당금']
+                st.dataframe(display_details[cols_to_show], use_container_width=True, hide_index=True)
+            else:
+                st.write("해당 월에는 예정된 배당금이 없습니다.")
+        else:
+            st.write("데이터를 불러올 수 없습니다.")
+        
+        if st.button("상세 내역 닫기"):
+            del st.session_state['selected_month']
+            st.rerun()
