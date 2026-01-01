@@ -1,0 +1,7 @@
+streamlit
+pandas
+yfinance
+plotly
+altair
+# Optional for better formatting/performance
+openpyxl

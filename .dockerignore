@@ -1,0 +1,14 @@
+venv/
+.venv/
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.git/
+.vscode/
+.DS_Store
+*.db
+etf_tracker/data/*.db
+verify_app.py
+verify_gs_sync.py
+debug_yield.py
