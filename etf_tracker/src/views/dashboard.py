@@ -59,7 +59,7 @@ def render():
         
         display_df = display_df.rename(columns={
             'Ticker': 'TICKER',
-            'Sector': '성향',
+            'Category': '카테고리',
             'Shares': '수량',
             'Avg Cost': '평단가',
             'Current Price': '현재가',
@@ -75,7 +75,7 @@ def render():
         display_df['수익률'] = display_df['수익률'].apply(lambda x: f"{x:.2f}%")
         display_df['배당률'] = display_df['배당률'].apply(lambda x: f"{x * 100:.2f}%")
         
-        cols = ['TICKER', '성향', '수량', '평단가', '현재가', '수익률', '배당률', '평가액']
+        cols = ['TICKER', '카테고리', '수량', '평단가', '현재가', '수익률', '배당률', '평가액']
         st.dataframe(display_df[cols], use_container_width=True, hide_index=True)
     else:
         st.info("등록된 ETF가 없습니다. 'ETF 등록' 탭에서 종목을 추가하세요.")

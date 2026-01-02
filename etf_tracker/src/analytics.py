@@ -21,7 +21,7 @@ def calculate_portfolio_metrics(holdings: List[Tuple[Any, ...]], market_data: pd
         return pd.DataFrame()
         
     # Convert DB tuples to DataFrame
-    df = pd.DataFrame(holdings, columns=['ID', 'Ticker', 'Shares', 'Avg Cost', 'Sector', 'Currency'])
+    df = pd.DataFrame(holdings, columns=['ID', 'Ticker', 'Shares', 'Avg Cost', 'Category', 'Currency'])
     
     # Merge with market data
     if market_data.empty:
@@ -29,7 +29,7 @@ def calculate_portfolio_metrics(holdings: List[Tuple[Any, ...]], market_data: pd
         df['Current Price'] = df['Avg Cost'] 
         df['Yield'] = 0.0
         df['Name'] = df['Ticker']
-        df['Sector_Live'] = 'Unknown'
+        df['Category_Live'] = 'Unknown'
     else:
         # Merge on Ticker
         df = df.merge(market_data, on='Ticker', how='left')
@@ -39,18 +39,28 @@ def calculate_portfolio_metrics(holdings: List[Tuple[Any, ...]], market_data: pd
         df['Yield'] = df['Yield'].fillna(0.0)
         df['Name'] = df['Name'].fillna(df['Ticker'])
         
-    # Sector Logic: 
-    # Prioritize DB Sector (from df['Sector']) if it exists and is not empty.
-    # market_data also has 'Sector'.
-    if 'Sector_y' in df.columns:
-        # Preferred logic when merge creates suffixes
-        df['Sector'] = df['Sector_x'].fillna('').replace('', None).fillna(df['Sector_y'])
-    elif 'Sector' not in df.columns and 'Sector_y' not in df.columns:
-        # Fallback if somehow Sector is missing
-        df['Sector'] = 'Unknown'
+    # Category Logic: 
+    # Prioritize DB Category if it exists. yfinance sector is in 'Sector'.
+    if 'Sector' in df.columns:
+        df['Category'] = df['Category'].fillna('').replace('', None).fillna(df['Sector'])
     
-    # Final cleanup
-    df['Sector'] = df['Sector'].fillna('Unknown').replace('', 'Unknown')
+    # Map to general categories if it's still yfinance raw sector
+    sector_map = {
+        'Technology': '기술',
+        'Healthcare': '헬스케어',
+        'Financial Services': '금융',
+        'Consumer Cyclical': '소비재(임의)',
+        'Consumer Defensive': '소비재(필수)',
+        'Communication Services': '통신',
+        'Industrials': '산업재',
+        'Energy': '에너지',
+        'Utilities': '유틸리티',
+        'Real Estate': '부동산',
+        'Basic Materials': '기초소재'
+    }
+    
+    df['Category'] = df['Category'].fillna('Unknown').replace('', 'Unknown')
+    df['Category'] = df['Category'].apply(lambda x: sector_map.get(x, x))
 
     # Financial Calculations
     try:

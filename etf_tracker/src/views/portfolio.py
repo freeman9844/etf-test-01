@@ -9,15 +9,19 @@ def render():
     
     # Input Form
     with st.form("add_etf_form"):
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         ticker = col1.text_input("티커 (예: SCHD)")
         shares = col2.number_input("수량", min_value=0.01, step=0.01)
         avg_cost = col3.number_input("평단가 ($)", min_value=0.01, step=0.01)
         
+        # General Categories
+        categories = ["기술", "배당", "성장", "지수", "채권", "부동산", "에너지", "기타"]
+        category = col4.selectbox("카테고리", categories)
+        
         submitted = st.form_submit_button("추가 / 업데이트")
         if submitted and ticker and shares > 0:
-            database.add_holding(ticker, shares, avg_cost)
-            st.success(f"저장되었습니다: {ticker.upper()}")
+            database.add_holding(ticker, shares, avg_cost, category)
+            st.success(f"저장되었습니다: {ticker.upper()} ({category})")
             st.rerun()
 
     # Display Holdings
@@ -52,12 +56,12 @@ def render():
     st.markdown("---")
     
     if holdings:
-        df = pd.DataFrame(holdings, columns=['ID', 'Ticker', 'Shares', 'Avg Cost', 'Sector', 'Currency'])
+        df = pd.DataFrame(holdings, columns=['ID', 'Ticker', 'Shares', 'Avg Cost', 'Category', 'Currency'])
         display_df = df.rename(columns={
             'Ticker': '티커',
             'Shares': '수량',
             'Avg Cost': '평단가',
-            'Sector': '섹터',
+            'Category': '카테고리',
             'Currency': '통화'
         })
         st.dataframe(display_df, use_container_width=True)
