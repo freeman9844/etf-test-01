@@ -7,6 +7,26 @@ from typing import List, Optional, Any
 # Configure Logger
 logger = logging.getLogger(__name__)
 
+SECTOR_MAP = {
+    'Technology': '기술',
+    'Healthcare': '헬스케어',
+    'Financial Services': '금융',
+    'Consumer Cyclical': '소비재(임의)',
+    'Consumer Defensive': '소비재(필수)',
+    'Communication Services': '통신',
+    'Industrials': '산업재',
+    'Energy': '에너지',
+    'Utilities': '유틸리티',
+    'Real Estate': '부동산',
+    'Basic Materials': '기초소재'
+}
+
+def map_sector_to_category(sector: str) -> str:
+    """Maps a raw yfinance sector to a Korean category."""
+    if not sector or sector == 'Unknown':
+        return '기타'
+    return SECTOR_MAP.get(sector, sector)
+
 @st.cache_data(ttl=900)
 def get_market_data(tickers: List[str]) -> pd.DataFrame:
     """

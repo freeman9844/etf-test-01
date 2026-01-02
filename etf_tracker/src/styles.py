@@ -78,6 +78,48 @@ def apply_global_styles():
             margin-top: 5px;
         }
         
+        /* Sync Card (Portfolio) */
+        .sync-card {
+            background-color: #151515;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #2A2A2A;
+            height: 100%;
+        }
+        .sync-title {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .sync-desc {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            background-color: #0F2A1E;
+            color: #00CC96;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .guide-box {
+            background-color: #0C120C;
+            border: 1px solid #1E3A1E;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #00CC96;
+            margin: 10px 0;
+        }
+        
         /* Text Colors */
         .positive { color: #00CC96; }
         .negative { color: #EF553B; }

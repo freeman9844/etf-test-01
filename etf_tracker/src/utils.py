@@ -2,6 +2,7 @@ import pandas as pd
 import io
 import datetime
 import logging
+import urllib.request
 from typing import List, Tuple, Any
 from src import database, fetcher, analytics
 
@@ -94,3 +95,36 @@ def import_from_csv(csv_content: str) -> Tuple[bool, str]:
     except Exception as e:
         logger.error(f"Error importing CSV: {e}")
         return False, f"오류 발생: {str(e)}"
+
+def import_from_url(url: str) -> Tuple[bool, str]:
+    """
+    Imports holdings from a Google Sheets URL or any valid CSV URL.
+    Attempts to convert standard Google Sheet edit URLs to export URLs.
+    """
+    try:
+        url = url.strip()
+        if not url:
+            return False, "URL을 입력해주세요."
+            
+        # Transform Google Sheets Edit URL to CSV Export URL
+        if "docs.google.com/spreadsheets/d/" in url and ("/edit" in url or url.endswith("/")):
+            # Extract ID and construct export URL
+            if "/edit" in url:
+                url = url.split("/edit")[0] + "/export?format=csv"
+            else:
+                url = url.rstrip("/") + "/export?format=csv"
+        elif "docs.google.com/spreadsheets/d/e/" in url and "pub" in url:
+            # Published CSV - ensure output=csv
+            if "output=csv" not in url:
+                url += "&output=csv" if "?" in url else "?output=csv"
+                
+        # Fetch content using urllib
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            content = response.read().decode('utf-8')
+            return import_from_csv(content)
+            
+    except Exception as e:
+        logger.error(f"Error importing from URL: {e}")
+        return False, f"동기화 실패: {str(e)}"

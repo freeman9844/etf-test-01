@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 from typing import List, Tuple, Any, Optional
+from src import fetcher
 
 # Configure Logger
 logger = logging.getLogger(__name__)
@@ -38,29 +39,14 @@ def calculate_portfolio_metrics(holdings: List[Tuple[Any, ...]], market_data: pd
         df['Current Price'] = df['Current Price'].fillna(df['Avg Cost'])
         df['Yield'] = df['Yield'].fillna(0.0)
         df['Name'] = df['Name'].fillna(df['Ticker'])
-        
     # Category Logic: 
     # Prioritize DB Category if it exists. yfinance sector is in 'Sector'.
     if 'Sector' in df.columns:
         df['Category'] = df['Category'].fillna('').replace('', None).fillna(df['Sector'])
     
     # Map to general categories if it's still yfinance raw sector
-    sector_map = {
-        'Technology': '기술',
-        'Healthcare': '헬스케어',
-        'Financial Services': '금융',
-        'Consumer Cyclical': '소비재(임의)',
-        'Consumer Defensive': '소비재(필수)',
-        'Communication Services': '통신',
-        'Industrials': '산업재',
-        'Energy': '에너지',
-        'Utilities': '유틸리티',
-        'Real Estate': '부동산',
-        'Basic Materials': '기초소재'
-    }
-    
     df['Category'] = df['Category'].fillna('Unknown').replace('', 'Unknown')
-    df['Category'] = df['Category'].apply(lambda x: sector_map.get(x, x))
+    df['Category'] = df['Category'].apply(fetcher.map_sector_to_category)
 
     # Financial Calculations
     try:
