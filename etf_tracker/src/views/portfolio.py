@@ -4,47 +4,13 @@ from src import database, styles
 
 def render():
     styles.apply_global_styles()
-    
-    st.title("ETF 등록 및 관리")
-    
-    # Input Form
-    with st.form("add_etf_form"):
-        col1, col2, col3 = st.columns(3)
-        ticker_input = col1.text_input("티커 (예: SCHD)").upper().strip()
-        shares = col2.number_input("수량", min_value=0.01, step=0.01)
-        avg_cost = col3.number_input("평단가 ($)", min_value=0.01, step=0.01)
-        
-        st.markdown("💡 티커를 입력하고 추가 버튼을 누르면 카테고리가 **자동으로** 분석됩니다.")
-        
-        submitted = st.form_submit_button("추가 / 업데이트")
-        if submitted and ticker_input and shares > 0:
-            from src import fetcher
-            
-            # Fetch Category via API
-            with st.spinner(f"{ticker_input} 정보 조회 중..."):
-                market_data = fetcher.get_market_data([ticker_input])
-                if not market_data.empty:
-                    raw_sector = market_data.iloc[0].get('Sector', 'Unknown')
-                    category = fetcher.map_sector_to_category(raw_sector)
-                else:
-                    category = "기타"
-            
-            database.add_holding(ticker_input, shares, avg_cost, category)
-            st.success(f"저장되었습니다: {ticker_input} (카테고리: {category})")
-            st.rerun()
-
-    # Display Holdings
-    st.subheader("보유 종목 현황")
-    holdings = database.get_holdings()
-    
-    # ---------------------------------------------------------
-    # Smart Sheet Sync Section (Mockup based)
-    # ---------------------------------------------------------
     from src import utils
     import datetime
     
-    st.markdown("### 스마트 시트 동기화")
+    st.title("ETF 등록 및 관리")
     
+    # 1. Smart Sheet Sync Section
+    st.markdown("### 스마트 시트 동기화")
     col_sync, col_guide = st.columns(2)
     
     with col_sync:
@@ -55,8 +21,8 @@ def render():
         """, unsafe_allow_html=True)
         
         gs_url = st.text_input("URL/ID 입력", 
-                              placeholder="https://docs.google.com/spreadsheets/d/...", 
-                              label_visibility="collapsed")
+                               placeholder="https://docs.google.com/spreadsheets/d/...", 
+                               label_visibility="collapsed")
         
         btn_col1, btn_col2 = st.columns(2)
         with btn_col1:
@@ -84,9 +50,8 @@ def render():
             
         if 'sync_status' in st.session_state:
             st.markdown(f'<div class="status-badge">{st.session_state["sync_status"]}</div>', unsafe_allow_html=True)
-            # We keep it visible, it will clear on next manual interaction or rerun if we wanted
             
-        st.markdown('</div>', unsafe_allow_html=True) # Close sync-card
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col_guide:
         st.markdown("""
@@ -106,7 +71,6 @@ def render():
             </div>
         """, unsafe_allow_html=True)
 
-    # File Uploader as secondary option (Small)
     with st.expander("또는 CSV 파일 직접 업로드"):
         uploaded_file = st.file_uploader("CSV 파일 선택", type=["csv"])
         if uploaded_file is not None:
@@ -121,6 +85,36 @@ def render():
 
     st.markdown("---")
     
+    # 2. Manual Input Form
+    st.subheader("ETF 직접 등록")
+    with st.form("add_etf_form"):
+        col1, col2, col3 = st.columns(3)
+        ticker_input = col1.text_input("티커 (예: SCHD)").upper().strip()
+        shares = col2.number_input("수량", min_value=0.01, step=0.01)
+        avg_cost = col3.number_input("평단가 (&dollar;)", min_value=0.01, step=0.01)
+        
+        st.markdown("💡 티커를 입력하고 추가 버튼을 누르면 카테고리가 **자동으로** 분석됩니다.")
+        
+        submitted = st.form_submit_button("추가 / 업데이트")
+        if submitted and ticker_input and shares > 0:
+            from src import fetcher
+            with st.spinner(f"{ticker_input} 정보 조회 중..."):
+                market_data = fetcher.get_market_data([ticker_input])
+                if not market_data.empty:
+                    raw_sector = market_data.iloc[0].get('Sector', 'Unknown')
+                    category = fetcher.map_sector_to_category(raw_sector)
+                else:
+                    category = "기타"
+            
+            database.add_holding(ticker_input, shares, avg_cost, category)
+            st.success(f"저장되었습니다: {ticker_input} (카테고리: {category})")
+            st.rerun()
+
+    st.markdown("---")
+    
+    # 3. Display Holdings
+    st.subheader("보유 종목 현황")
+    holdings = database.get_holdings()
     if holdings:
         df = pd.DataFrame(holdings, columns=['ID', 'Ticker', 'Shares', 'Avg Cost', 'Category', 'Currency'])
         display_df = df.rename(columns={
